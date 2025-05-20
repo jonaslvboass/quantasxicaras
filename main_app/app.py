@@ -12,6 +12,10 @@ import views.estoque_view as estoque_view
 import views.ingredientes_view as ingredientes_view
 import views.conversor_view as conversor_view
 from functools import wraps
+import pika
+import json
+import uuid
+import controllers.recomendacao_controller as recomendacao_controller
 
 app = Flask(__name__)
 app.secret_key = 'quantasxicaras@Secret'
@@ -88,7 +92,7 @@ def buscar_receitas():
 @requer_login
 def recomendar():
     usuario_id = session.get('usuario_id')
-    receitas = receitas_controller.recomendar_receitas(usuario_id)
+    receitas = recomendacao_controller.obter_recomendacoes(usuario_id)
     return receitas_view.renderizar_recomendacoes(receitas)
 
 # Rotas de estoque
