@@ -16,15 +16,29 @@ import pika
 import json
 import uuid
 import controllers.recomendacao_controller as recomendacao_controller
+import requests
 
 app = Flask(__name__)
 app.secret_key = 'quantasxicaras@Secret'
 
+AUTH_API_URL = 'http://localhost:5001'
+
 def requer_login(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        if 'usuario_id' not in session:
+        token = session.get('jwt_token')
+        if not token:
             return redirect(url_for('login'))
+        # Verifica o token na auth_api
+        resp = requests.post(f'{AUTH_API_URL}/verify_token', json={'token': token})
+        if resp.status_code != 200 or not resp.json().get('valid'):
+            session.clear()
+            return redirect(url_for('login'))
+        # Atualiza dados do usuário na sessão
+        payload = resp.json()
+        session['usuario_id'] = payload.get('usuario_id')
+        session['usuario_nome'] = payload.get('nome')
+        session['admin'] = payload.get('admin', False)
         return f(*args, **kwargs)
     return decorated_function
 
@@ -39,7 +53,9 @@ def cadastro():
     if request.method == 'POST':
         nome = request.form['nome']
         senha = request.form['senha']
-        resultado = cozinheiros_controller.cadastrar_usuario(nome, senha)
+        admin = request.form.get('admin') == '1'
+        admin_token = session.get('jwt_token') if admin else None
+        resultado = cozinheiros_controller.cadastrar_usuario(nome, senha, admin, admin_token)
         return resultado or "Cadastro realizado! <a href='/login'>Ir para login</a>"
     else:
         return cozinheiros_view.renderizar_cadastro()
@@ -51,9 +67,10 @@ def login():
         senha = request.form['senha']
         resultado = cozinheiros_controller.autenticar_usuario(nome, senha)
         if resultado and isinstance(resultado, dict):
-            session['usuario_id'] = resultado['usuario_id']
-            session['usuario_nome'] = resultado['nome']
+            session['usuario_id'] = resultado.get('usuario_id')
+            session['usuario_nome'] = resultado.get('nome')
             session['jwt_token'] = resultado.get('token', '')
+            session['admin'] = resultado.get('admin', False)
             return redirect(url_for('home'))
         else:
             return "Nome ou senha incorretos. <a href='/login'>Tentar novamente</a>"
@@ -74,7 +91,8 @@ def adicionar_receita():
         modo_preparo = request.form['modo_preparo']
         ingredientes = request.form.getlist('ingrediente_id[]')
         quantidades = request.form.getlist('quantidade[]')
-        resultado = receitas_controller.adicionar_receita(nome, modo_preparo, ingredientes, quantidades)
+        autor_id = session.get('usuario_id')
+        resultado = receitas_controller.adicionar_receita(nome, modo_preparo, ingredientes, quantidades, autor_id)
         if resultado:
             return f"{resultado} <br><a href='/buscar_receitas'>Voltar</a>"
         return "Receita adicionada! <a href='/buscar_receitas'>Voltar</a>"

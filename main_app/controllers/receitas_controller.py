@@ -1,9 +1,9 @@
 from models import receitas_model
 
-def adicionar_receita(nome, modo_preparo, ingredientes, quantidades):
-    if not nome or not modo_preparo or not ingredientes or not quantidades:
+def adicionar_receita(nome, modo_preparo, ingredientes, quantidades, autor_id):
+    if not nome or not modo_preparo or not ingredientes or not quantidades or not autor_id:
         return 'Todos os campos são obrigatórios.'
-    receitas_model.inserir_receita(nome, modo_preparo, ingredientes, quantidades)
+    receitas_model.inserir_receita(nome, modo_preparo, ingredientes, quantidades, autor_id)
     return None
 
 def obter_receitas():

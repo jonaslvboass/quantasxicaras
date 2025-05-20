@@ -6,6 +6,8 @@ def renderizar_cadastro():
             <input type='text' id='nome' name='nome' required><br><br>
             <label for='senha'>Senha:</label>
             <input type='password' id='senha' name='senha' required><br><br>
+            <label for='admin'>Administrador?</label>
+            <input type='checkbox' id='admin' name='admin' value='1'><br><br>
             <button type='submit'>Cadastrar</button>
         </form>
         <a href='/home'>Voltar</a>

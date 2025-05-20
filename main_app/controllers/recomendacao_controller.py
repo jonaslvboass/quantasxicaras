@@ -9,6 +9,14 @@ def obter_recomendacoes(usuario_id):
     callback_queue = result.method.queue
     corr_id = str(uuid.uuid4())
     response = None
+
+    # Limpa mensagens antigas na fila de callback
+    while True:
+        method_frame, header_frame, body = channel.basic_get(callback_queue)
+        if method_frame is None:
+            break
+        channel.basic_ack(method_frame.delivery_tag)
+
     def on_response(ch, method, props, body):
         nonlocal response
         if props.correlation_id == corr_id:
@@ -28,4 +36,5 @@ def obter_recomendacoes(usuario_id):
         connection.process_data_events(time_limit=1)
     channel.close()
     connection.close()
+    print(response)
     return response['recommendation'] 

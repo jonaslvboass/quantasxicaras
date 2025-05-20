@@ -11,3 +11,4 @@ Esse é um sistema de gestão de receitas e ingredientes. Diferente de outros si
 [Primeira versão](docs/v1.md)
 [Segunda versão](docs/v2.md)
 [Terceira versão](docs/v3.md)
+[Quarta versão](docs/v4.md)

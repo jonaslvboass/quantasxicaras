@@ -12,20 +12,16 @@ def resetar_banco():
         os.remove(DB_PATH)
     conn = get_connection()
     c = conn.cursor()
-    c.execute('''CREATE TABLE usuarios (
-        id INTEGER PRIMARY KEY, 
-        nome TEXT, 
-        senha TEXT
-    )''')
     c.execute('''CREATE TABLE ingredientes (
         id INTEGER PRIMARY KEY,
         nome TEXT UNIQUE,
         ml_por_grama FLOAT
     )''')
     c.execute('''CREATE TABLE receitas (
-        id INTEGER PRIMARY KEY, 
-        nome TEXT, 
-        modo_preparo TEXT
+        id INTEGER PRIMARY KEY,
+        nome TEXT,
+        modo_preparo TEXT,
+        autor_id INTEGER
     )''')
     c.execute('''CREATE TABLE receitas_ingredientes (
         receita_id INTEGER,
@@ -36,11 +32,10 @@ def resetar_banco():
         PRIMARY KEY (receita_id, ingrediente_id)
     )''')
     c.execute('''CREATE TABLE estoque (
-        id INTEGER PRIMARY KEY, 
+        id INTEGER PRIMARY KEY,
         usuario_id INTEGER,
         ingrediente_id INTEGER,
         quantidade FLOAT,
-        FOREIGN KEY (usuario_id) REFERENCES usuarios(id),
         FOREIGN KEY (ingrediente_id) REFERENCES ingredientes(id)
     )''')
     conn.commit()
