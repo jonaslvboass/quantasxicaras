@@ -91,13 +91,28 @@ def verify_token():
 @bp.route('/usuarios', methods=['GET'])
 @admin_required
 def listar_todos_usuarios():
-    usuarios = db_service.listar_todos_usuarios()
-    return jsonify([{
+    # Modificar para aceitar paginação
+    limit = request.args.get('limit', default=10, type=int)
+    offset = request.args.get('offset', default=0, type=int)
+
+    usuarios_paginados = db_service.listar_usuarios_paginado(limit, offset)
+    total_usuarios = db_service.contar_total_usuarios()
+
+    # Formatar a lista de usuários
+    lista_usuarios = [{
         'id': u.id,
         'nome': u.nome,
         'admin': u.admin,
         'ativo': u.ativo
-    } for u in usuarios])
+    } for u in usuarios_paginados]
+
+    # Retornar dados paginados e total
+    return jsonify({
+        'usuarios': lista_usuarios,
+        'total': total_usuarios,
+        'limit': limit,
+        'offset': offset
+    })
 
 @bp.route('/usuarios/<int:usuario_id>', methods=['PUT'])
 @admin_required
@@ -111,6 +126,20 @@ def editar_usuario(usuario_id):
     if not atualizado:
         return jsonify({'error': 'Usuário não encontrado ou não atualizado.'}), 404
     return jsonify({'message': 'Usuário atualizado com sucesso.'})
+
+@bp.route('/usuarios/<int:usuario_id>', methods=['GET'])
+@admin_required
+def get_usuario_por_id(usuario_id):
+    usuario = db_service.buscar_usuario_por_id(usuario_id)
+    if not usuario:
+        return jsonify({'error': 'Usuário não encontrado.'}), 404
+    # Retorna os dados do usuário (excluindo a senha por segurança)
+    return jsonify({
+        'id': usuario.id,
+        'nome': usuario.nome,
+        'admin': usuario.admin,
+        'ativo': usuario.ativo
+    })
 
 @bp.route('/usuarios/<int:usuario_id>/bloquear', methods=['POST'])
 @admin_required
@@ -127,3 +156,13 @@ def desbloquear_usuario(usuario_id):
     if not sucesso:
         return jsonify({'error': 'Usuário não encontrado.'}), 404
     return jsonify({'message': 'Usuário desbloqueado com sucesso.'})
+
+# Novo endpoint para logout
+@bp.route('/logout', methods=['POST'])
+def logout_user():
+    auth_header = request.headers.get('Authorization', '')
+    if not auth_header.startswith('Bearer '):
+        return jsonify({'error': 'Token de autenticação necessário.'}), 401
+    token = auth_header.split(' ', 1)[1]
+    db_service.deletar_sessao(token)
+    return jsonify({'message': 'Logout realizado com sucesso.'}), 200

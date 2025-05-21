@@ -74,6 +74,22 @@ class DBService:
         conn.close()
         return [Usuario.from_row(row) for row in rows]
 
+    def contar_total_usuarios(self):
+        conn = self.get_conn()
+        c = conn.cursor()
+        c.execute('SELECT COUNT(*) FROM usuarios')
+        count = c.fetchone()[0]
+        conn.close()
+        return count
+
+    def listar_usuarios_paginado(self, limit, offset):
+        conn = self.get_conn()
+        c = conn.cursor()
+        c.execute('SELECT id, nome, senha, admin, ativo FROM usuarios ORDER BY id LIMIT ? OFFSET ?', (limit, offset))
+        rows = c.fetchall()
+        conn.close()
+        return [Usuario.from_row(row) for row in rows]
+
     def editar_usuario(self, usuario_id, nome=None, senha=None, admin=None, ativo=None):
         conn = self.get_conn()
         c = conn.cursor()

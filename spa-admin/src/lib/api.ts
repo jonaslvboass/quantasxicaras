@@ -11,7 +11,7 @@ export async function apiFetch(
   };
 
   if (token) {
-    headers["Authorization"] = `Bearer ${token}`;
+    (headers as Record<string, string>)["Authorization"] = `Bearer ${token}`;
   }
 
   const res = await fetch(`http://localhost:5001${path}`, {
